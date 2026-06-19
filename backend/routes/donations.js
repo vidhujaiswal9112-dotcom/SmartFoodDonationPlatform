@@ -74,31 +74,47 @@ router.delete("/:id", async (req, res) => {
     }
 
 });
-
-
-// Update Status
+// Claim Donation
 router.put("/claim/:id", async (req, res) => {
 
     try {
 
-        await Donation.findByIdAndUpdate(
+        const donation = await Donation.findByIdAndUpdate(
 
             req.params.id,
 
             {
                 status: "Claimed"
+            },
+
+            {
+                new: true
             }
 
         );
 
+        if (!donation) {
+
+            return res.status(404).json({
+                message: "Donation not found"
+            });
+
+        }
+
         res.json({
+
             message: "Donation claimed successfully"
+
         });
 
     } catch (error) {
 
+        console.log(error);
+
         res.status(500).json({
+
             message: "Server Error"
+
         });
 
     }

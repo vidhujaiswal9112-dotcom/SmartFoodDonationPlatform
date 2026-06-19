@@ -1,96 +1,10 @@
-// Register User
-async function registerUser() {
-
-    const userData = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-        role: document.getElementById("role").value
-    };
-
-    try {
-
-        const response = await fetch(
-            "http://localhost:5000/api/users/register",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(userData)
-            }
-        );
-
-        const data = await response.json();
-
-        alert(data.message);
-
-    } catch (error) {
-
-        alert("Registration Failed");
-
-    }
-
-}
-
-
-// Login User
-async function loginUser() {
-
-    const loginData = {
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
-    };
-
-    try {
-
-        const response = await fetch(
-            "http://localhost:5000/api/users/login",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(loginData)
-            }
-        );
-
-        const data = await response.json();
-
-        alert(data.message);
-
-        if (response.ok) {
-
-           if(data.user.role==="ngo")
-{
-    window.location.href="ngo-dashboard.html";
-}
-else
-{
-    window.location.href="donor-dashboard.html";
-}
-        }
-
-    } catch (error) {
-
-        alert("Login Failed");
-
-    }
-
-}
-
-
-// Add Donation
+// ================= ADD DONATION =================
 async function addDonation() {
 
-    const donationData = {
-
-        foodName: document.getElementById("foodName").value,
-        quantity: document.getElementById("quantity").value,
-        location: document.getElementById("location").value,
-        expiryTime: document.getElementById("expiryTime").value
-
-    };
+    const foodName = document.getElementById("foodName").value;
+    const quantity = document.getElementById("quantity").value;
+    const location = document.getElementById("location").value;
+    const expiryTime = document.getElementById("expiryTime").value;
 
     try {
 
@@ -101,13 +15,23 @@ async function addDonation() {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(donationData)
+                body: JSON.stringify({
+                    foodName,
+                    quantity,
+                    location,
+                    expiryTime
+                })
             }
         );
 
         const data = await response.json();
 
         alert(data.message);
+
+        document.getElementById("foodName").value = "";
+        document.getElementById("quantity").value = "";
+        document.getElementById("location").value = "";
+        document.getElementById("expiryTime").value = "";
 
         loadDonations();
 
@@ -120,7 +44,7 @@ async function addDonation() {
 }
 
 
-// Load Donations
+// ================= LOAD DONATIONS =================
 async function loadDonations() {
 
     try {
@@ -138,11 +62,10 @@ async function loadDonations() {
             output += `
 
             <div class="card">
-    <h2 class="text-success">
-        ${donation.foodName}
-    </h2>
 
-                <h2>${donation.foodName}</h2>
+                <h2 class="text-success">
+                    ${donation.foodName}
+                </h2>
 
                 <p><b>Quantity:</b> ${donation.quantity}</p>
 
@@ -152,23 +75,57 @@ async function loadDonations() {
 
                 <p>
 
-               <b>Status:</b>
+                    <b>Status:</b>
 
-               <span style="color:${donation.status==="Available"?"green":
-"red"
-}">
+                    <span style="color:${
+                        donation.status === "Available"
+                        ? "green"
+                        : "red"
+                    }">
 
-${donation.status}
+                    ${donation.status}
 
-</span>
+                    </span>
 
-</p>
+                </p>
 
-               <button class="btn btn-warning"onclick="claimDonation('${donation._id}')">Claim Food
-               </button>
+                ${
+                    window.location.pathname.includes("ngo-dashboard.html")
+                    ?
+                    (
+                        donation.status === "Available"
+                        ?
+                        `
+                        <button
+                        class="btn btn-warning"
+                        onclick="claimDonation('${donation._id}')">
 
-               <button class="btn btn-danger mt-2"onclick="deleteDonation('${donation._id}')">Delete
-               </button>
+                        Claim Food
+
+                        </button>
+                        `
+                        :
+                        `
+                        <button
+                        class="btn btn-secondary"
+                        disabled>
+
+                        Already Claimed
+
+                        </button>
+                        `
+                    )
+                    :
+                    ""
+                }
+
+                <button
+                class="btn btn-danger mt-2"
+                onclick="deleteDonation('${donation._id}')">
+
+                Delete
+
+                </button>
 
             </div>
 
@@ -176,20 +133,20 @@ ${donation.status}
 
         });
 
-        if (document.getElementById("donationList")) {
+        document.getElementById("donationList").innerHTML = output;
 
-            document.getElementById("donationList").innerHTML = output;
+    }
 
-        }
-
-    } catch (error) {
+    catch (error) {
 
         console.log(error);
 
     }
 
 }
-// Claim Donation
+
+
+// ================= CLAIM DONATION =================
 async function claimDonation(id) {
 
     try {
@@ -210,7 +167,9 @@ async function claimDonation(id) {
 
         loadDonations();
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         alert("Failed");
 
@@ -219,7 +178,7 @@ async function claimDonation(id) {
 }
 
 
-// Delete Donation
+// ================= DELETE DONATION =================
 async function deleteDonation(id) {
 
     try {
@@ -237,14 +196,12 @@ async function deleteDonation(id) {
         const data = await response.json();
 
         alert(data.message);
-        document.getElementById("foodName").value="";
-       document.getElementById("quantity").value="";
-       document.getElementById("location").value="";
-       document.getElementById("expiryTime").value="";
 
         loadDonations();
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         alert("Delete Failed");
 
@@ -253,41 +210,9 @@ async function deleteDonation(id) {
 }
 
 
-// Automatically load donations
-if (window.location.pathname.includes("donor-dashboard.html")) {
+// ================= SEARCH =================
+function searchDonation() {
 
-    loadDonations();
-
-}
-async function claimDonation(id) {
-
-    try {
-
-        const response = await fetch(
-
-            `http://localhost:5000/api/donations/claim/${id}`,
-
-            {
-                method: "PUT"
-            }
-
-        );
-
-        const data = await response.json();
-
-        alert(data.message);
-
-        loadDonations();
-
-    } catch (error) {
-
-        alert("Failed");
-
-    }
-
-}
-function searchDonation()
-{
     let input =
     document.getElementById("searchBox").value.toLowerCase();
 
@@ -299,18 +224,38 @@ function searchDonation()
         let food =
         card.innerText.toLowerCase();
 
-        if(food.includes(input))
-        {
+        if (food.includes(input)) {
+
             card.style.display = "block";
+
         }
-        else
-        {
+
+        else {
+
             card.style.display = "none";
+
         }
 
     });
+
 }
-function logout()
-{
-    window.location.href="login.html";
+
+
+// ================= LOGOUT =================
+function logout() {
+
+    window.location.href = "login.html";
+
+}
+
+
+// ================= AUTO LOAD =================
+if (
+    window.location.pathname.includes("donor-dashboard.html")
+    ||
+    window.location.pathname.includes("ngo-dashboard.html")
+) {
+
+    loadDonations();
+
 }
